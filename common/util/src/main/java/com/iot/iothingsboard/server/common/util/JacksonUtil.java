@@ -1,10 +1,10 @@
 package com.iot.iothingsboard.server.common.util;
 
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.MapperFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.core.json.JsonWriteFeature;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jdk8.*;
 
@@ -21,6 +21,34 @@ public class JacksonUtil {
             .configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true)
             .configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true)
             .build();
+
+    public static final ObjectMapper ALLOW_UNQUOTED_FIELD_NAMES_MAPPER = JsonMapper.builder()
+            .addModule(new Jdk8Module())
+            .configure(JsonWriteFeature.QUOTE_FIELD_NAMES.mappedFeature(),false)
+            .configure(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES,true)
+            .build();
+
+    public static final ObjectMapper IGNORE_UNKNOWN_PROPERTIES_JSON_MAPPER=JsonMapper.builder()
+            .addModule(new Jdk8Module())
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,false)
+            .build();
+
+
+    public static <T> T convertValue(Object fromValue, Class<T> toValueType){
+        try{
+            return fromValue !=null ?OBJECT_MAPPER.convertValue(fromValue, toValueType): null;
+        }catch (IllegalArgumentException e){
+            throw new IllegalArgumentException("The given object value cannot be converted to "+ toValueType + ": " + fromValue,e);
+        }
+    }
+
+    public static<T> T convertValue(Object fromValue, TypeReference<T> toValueTypeRef){
+        try{
+            return fromValue !=null ? OBJECT_MAPPER.convertValue(fromValue, toValueTypeRef):null;
+        }catch (IllegalArgumentException e){
+            throw new IllegalArgumentException("The given object value cannot be converted to "+ toValueTypeRef + ": " + fromValue,e);
+        }
+    }
 
     public static String toPrettyString(Object value){
         try{
